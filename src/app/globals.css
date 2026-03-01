@@ -1,26 +1,215 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --bg: #FCFCFD;
+  --surface: #FFFFFF;
+  --surface-2: #F6F7F9;
+  --text: #0B0F19;
+  --muted-text: #5A6475;
+  --border: #E6E8EE;
+  --shadow: rgba(11,15,25,0.06);
+
+  --primary: #F5C84B;
+  --primary-600: #E7B93E;
+  --primary-700: #D6A72F;
+  --on-primary: #111318;
+  --ring: rgba(245,200,75,0.45);
+
+  --success: #16A34A;
+  --danger: #DC2626;
+  --warning: #F59E0B;
+  --info: #2563EB;
+
+  --surface-3: color-mix(in oklab, var(--surface) 76%, var(--surface-2));
+  --edge: color-mix(in oklab, var(--border) 75%, transparent);
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+.dark {
+  --bg: #0B0F14;
+  --surface: #0F1620;
+  --surface-2: #121C28;
+  --text: #E7ECF4;
+  --muted-text: #A7B0C2;
+  --border: #1E2A3A;
+  --shadow: rgba(0,0,0,0.35);
+
+  --primary: #FFD766;
+  --primary-600: #F5C84B;
+  --primary-700: #E7B93E;
+  --on-primary: #101319;
+  --ring: rgba(255,215,102,0.35);
+
+  --success: #16A34A;
+  --danger: #DC2626;
+  --warning: #F59E0B;
+  --info: #2563EB;
+
+  --surface-3: color-mix(in oklab, var(--surface) 65%, var(--surface-2));
+  --edge: color-mix(in oklab, var(--border) 75%, transparent);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+* {
+  border-color: var(--border);
+  box-sizing: border-box;
+}
+
+html,
+body {
+  min-height: 100%;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  margin: 0;
+  color: var(--text);
+  font-family: var(--font-inter), sans-serif;
+  font-size: 1rem;
+  line-height: 1.5;
+  letter-spacing: -0.01em;
+  background-color: var(--bg);
+  background-image:
+    radial-gradient(920px 420px at -8% -12%, color-mix(in oklab, var(--primary) 26%, transparent), transparent 72%),
+    radial-gradient(740px 360px at 102% -4%, color-mix(in oklab, var(--info) 14%, transparent), transparent 76%),
+    radial-gradient(880px 440px at 48% 112%, color-mix(in oklab, var(--primary) 8%, transparent), transparent 78%),
+    repeating-linear-gradient(
+      0deg,
+      color-mix(in oklab, var(--border) 22%, transparent) 0,
+      color-mix(in oklab, var(--border) 22%, transparent) 1px,
+      transparent 1px,
+      transparent 36px
+    );
+}
+
+::selection {
+  background: color-mix(in oklab, var(--primary) 40%, transparent);
+  color: var(--text);
+}
+
+h1,
+.h1 {
+  font-size: 1.875rem;
+  line-height: 1.2;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+h2,
+.h2 {
+  font-size: 1.5rem;
+  line-height: 1.25;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+}
+
+h3,
+.h3 {
+  font-size: 1.25rem;
+  line-height: 1.3;
+  font-weight: 600;
+}
+
+.display {
+  font-size: 2.25rem;
+  line-height: 1.1;
+  font-weight: 600;
+  letter-spacing: -0.03em;
+}
+
+.small {
+  font-size: 0.875rem;
+  line-height: 1.45;
+}
+
+.tiny {
+  font-size: 0.75rem;
+  line-height: 1.4;
+}
+
+.container-page {
+  width: 100%;
+  max-width: 1280px;
+  margin-inline: auto;
+  padding-inline: 1rem;
+}
+
+@media (min-width: 768px) {
+  .container-page {
+    padding-inline: 1.5rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .container-page {
+    padding-inline: 2rem;
+  }
+}
+
+@keyframes shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+@keyframes subtlePulse {
+  0%,
+  100% {
+    opacity: 0.7;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: color-mix(in oklab, var(--surface-2) 64%, transparent);
+}
+
+::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: color-mix(in oklab, var(--muted-text) 34%, var(--surface));
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: color-mix(in oklab, var(--muted-text) 50%, var(--surface));
+  background-clip: content-box;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+html.reduce-motion *,
+html.reduce-motion *::before,
+html.reduce-motion *::after {
+  animation: none !important;
+  transition: none !important;
+  scroll-behavior: auto !important;
+}
+
+html[data-ui-density="compact"] .container-page {
+  padding-inline: 0.75rem;
+}
+
+@media (min-width: 768px) {
+  html[data-ui-density="compact"] .container-page {
+    padding-inline: 1rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  html[data-ui-density="compact"] .container-page {
+    padding-inline: 1.25rem;
+  }
 }
