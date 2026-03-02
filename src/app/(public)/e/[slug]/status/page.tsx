@@ -1,9 +1,8 @@
 "use client";
 
-import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import { CheckCircle2 } from "lucide-react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { useEffect } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -14,6 +13,7 @@ import { setVoterOrganizationNameForElection, setVoterPrimaryColorForElection, s
 
 export default function StatusPage() {
   const { slug } = useParams<{ slug: string }>();
+  const router = useRouter();
 
   const query = useQuery({
     queryKey: ["status", slug],
@@ -93,8 +93,8 @@ export default function StatusPage() {
                   </strong>
                 </p>
                 <div className="mt-3">
-                  <Button asChild size="sm">
-                    <Link href={`/e/${slug}/results`}>View results now</Link>
+                  <Button size="sm" onClick={() => router.push(`/e/${slug}/results`)}>
+                    View results now
                   </Button>
                 </div>
               </>
@@ -106,8 +106,8 @@ export default function StatusPage() {
 
         {!query.data.data.voter_results_access_enabled && query.data.data.public_results_available ? (
           <div className="mt-4">
-            <Button asChild>
-              <Link href={`/e/${slug}/results`}>View published results</Link>
+            <Button onClick={() => router.push(`/e/${slug}/results`)}>
+              View published results
             </Button>
           </div>
         ) : null}

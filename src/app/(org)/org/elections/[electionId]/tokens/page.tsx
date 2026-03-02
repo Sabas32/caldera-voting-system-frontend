@@ -611,6 +611,9 @@ export default function ElectionTokensPage() {
                                 <DropdownMenuItem onSelect={() => window.open(`${API_BASE_URL}${endpoints.org.tokenExportPrint(batch.id)}`, "_blank")}>
                                   Open Print View
                                 </DropdownMenuItem>
+                                <DropdownMenuItem onSelect={() => window.open(`${API_BASE_URL}${endpoints.org.tokenExportQrPrint(batch.id)}`, "_blank")}>
+                                  QR Print Preview
+                                </DropdownMenuItem>
                                 <DropdownMenuItem onSelect={() => downloadFile({ path: endpoints.org.tokenExportQr(batch.id), filename: `${batch.label}-qr.zip` })}>
                                   Download QR Zip
                                 </DropdownMenuItem>

@@ -7,6 +7,8 @@ import { Toaster } from "sonner";
 
 import { applyPlatformSettingsToDocument, PLATFORM_SETTINGS_EVENT, readPlatformSettings } from "@/lib/platformSettings";
 
+const NEXT_THEME_STORAGE_KEY = "theme";
+
 function PlatformSettingsSync() {
   const { setTheme } = useTheme();
 
@@ -14,7 +16,10 @@ function PlatformSettingsSync() {
     const apply = () => {
       const settings = readPlatformSettings();
       applyPlatformSettingsToDocument(settings);
-      setTheme(settings.defaultThemeBehavior);
+      const explicitTheme = window.localStorage.getItem(NEXT_THEME_STORAGE_KEY);
+      if (!explicitTheme) {
+        setTheme(settings.defaultThemeBehavior);
+      }
     };
 
     apply();

@@ -2,7 +2,6 @@
 import { Inter } from "next/font/google";
 
 import { Providers } from "@/app/providers";
-
 import "./globals.css";
 
 const inter = Inter({

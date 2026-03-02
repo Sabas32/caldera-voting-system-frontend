@@ -6,6 +6,7 @@ import { useTheme } from "next-themes";
 import { toast } from "sonner";
 
 import { PageScaffold } from "@/components/layout/PageScaffold";
+import { ChangePasswordPanel } from "@/components/forms/ChangePasswordPanel";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -107,21 +108,22 @@ export default function SystemSettingsPage() {
 
   return (
     <PageScaffold title="Platform Settings" subtitle="Global system workspace preferences" crumbs={[{ label: "System" }, { label: "Settings" }]}>
-      <Card className="p-0">
-        <div className="border-b border-[var(--edge)] px-5 py-4 md:px-6">
-          <h2 className="text-xl font-semibold tracking-[-0.02em] text-[var(--text)]">System experience controls</h2>
-          <p className="mt-1 text-sm text-[var(--muted-text)]">
-            Configure branding, theme behavior, maintenance communication, and operational health visibility.
-          </p>
-        </div>
+      <div className="space-y-4">
+        <Card className="p-0">
+          <div className="border-b border-[var(--edge)] px-5 py-4 md:px-6">
+            <h2 className="text-xl font-semibold tracking-[-0.02em] text-[var(--text)]">System experience controls</h2>
+            <p className="mt-1 text-sm text-[var(--muted-text)]">
+              Configure branding, theme behavior, maintenance communication, and operational health visibility.
+            </p>
+          </div>
 
-        <form
-          className="space-y-6 px-5 py-5 md:px-6 md:py-6"
-          onSubmit={(event) => {
-            event.preventDefault();
-            handleSave();
-          }}
-        >
+          <form
+            className="space-y-6 px-5 py-5 md:px-6 md:py-6"
+            onSubmit={(event) => {
+              event.preventDefault();
+              handleSave();
+            }}
+          >
           <section className="rounded-[14px] border border-[var(--edge)] bg-[color-mix(in_oklab,var(--surface)_84%,var(--surface-2))] p-4 md:p-5">
             <h3 className="h3">Branding</h3>
             <p className="small mt-1 text-[var(--muted-text)]">Shown across system, organization, and voter dashboards.</p>
@@ -320,16 +322,18 @@ export default function SystemSettingsPage() {
             </div>
           </section>
 
-          <div className="flex flex-wrap items-center justify-end gap-2 border-t border-[var(--edge)] pt-4">
-            <Button type="button" variant="secondary" onClick={handleReset}>
-              Reset defaults
-            </Button>
-            <Button type="submit" disabled={!isDirty || saving}>
-              {saving ? "Saving..." : "Save platform settings"}
-            </Button>
-          </div>
-        </form>
-      </Card>
+            <div className="flex flex-wrap items-center justify-end gap-2 border-t border-[var(--edge)] pt-4">
+              <Button type="button" variant="secondary" onClick={handleReset}>
+                Reset defaults
+              </Button>
+              <Button type="submit" disabled={!isDirty || saving}>
+                {saving ? "Saving..." : "Save platform settings"}
+              </Button>
+            </div>
+          </form>
+        </Card>
+        <ChangePasswordPanel />
+      </div>
     </PageScaffold>
   );
 }

@@ -5,6 +5,7 @@ export const endpoints = {
     login: "/auth/login/",
     logout: "/auth/logout/",
     me: "/auth/me/",
+    changePassword: "/auth/change-password/",
   },
   system: {
     dashboard: "/system/dashboard/",
@@ -36,6 +37,7 @@ export const endpoints = {
     tokenExportCsv: (batchId: string) => `/org/token-batches/${batchId}/export/csv/`,
     tokenExportPrint: (batchId: string) => `/org/token-batches/${batchId}/export/print/`,
     tokenExportQr: (batchId: string) => `/org/token-batches/${batchId}/export/qr/`,
+    tokenExportQrPrint: (batchId: string) => `/org/token-batches/${batchId}/export/qr-print/`,
     results: (electionId: string) => `/org/elections/${electionId}/results/`,
     publishResults: (electionId: string) => `/org/elections/${electionId}/publish-results/`,
     exportExcel: (electionId: string) => `/org/elections/${electionId}/export/excel/`,
