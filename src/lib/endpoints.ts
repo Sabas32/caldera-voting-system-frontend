@@ -2,6 +2,7 @@ export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost
 
 export const endpoints = {
   auth: {
+    csrf: "/auth/csrf/",
     login: "/auth/login/",
     logout: "/auth/logout/",
     me: "/auth/me/",
