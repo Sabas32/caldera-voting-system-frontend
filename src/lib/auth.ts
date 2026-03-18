@@ -20,7 +20,9 @@ export type AuthUser = {
 };
 
 export const ORG_SELECTION_KEY = "caldera:selected-org-id";
+export const AUTH_SCOPE_KEY = "caldera:auth-scope";
 export const AUTH_ME_QUERY_KEY = ["auth", "me"] as const;
+export type AuthScope = "org" | "system";
 
 export async function getCurrentUser() {
   const res = await apiClient<{ data: AuthUser | null }>(endpoints.auth.me);
@@ -62,5 +64,28 @@ export function resolveOrgIdForUser(user: AuthUser): string | null {
 export function persistSelectedOrg(orgId: string) {
   if (typeof window !== "undefined") {
     window.localStorage.setItem(ORG_SELECTION_KEY, orgId);
+  }
+}
+
+export function setAuthScope(scope: AuthScope) {
+  if (typeof window !== "undefined") {
+    window.localStorage.setItem(AUTH_SCOPE_KEY, scope);
+  }
+}
+
+export function getAuthScope(): AuthScope | null {
+  if (typeof window === "undefined") {
+    return null;
+  }
+  const value = window.localStorage.getItem(AUTH_SCOPE_KEY);
+  if (value === "org" || value === "system") {
+    return value;
+  }
+  return null;
+}
+
+export function clearAuthScope() {
+  if (typeof window !== "undefined") {
+    window.localStorage.removeItem(AUTH_SCOPE_KEY);
   }
 }

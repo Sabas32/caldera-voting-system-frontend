@@ -5,6 +5,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
 import { DurationPicker } from "@/components/forms/DurationPicker";
+import { ChangePasswordPanel } from "@/components/forms/ChangePasswordPanel";
 import { PageScaffold } from "@/components/layout/PageScaffold";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -89,18 +90,19 @@ export default function OrgSettingsPage() {
 
   return (
     <PageScaffold title="Organization Settings" subtitle="Branding defaults and election defaults" crumbs={[{ label: "Organization" }, { label: "Settings" }]}>
-      <Card>
-        <form
-          className="space-y-6"
-          onSubmit={(event) => {
-            event.preventDefault();
-            if (hasInvalidCustomColor) {
-              toast.error("Enter a valid hex color for custom mode, for example #F5C84B.");
-              return;
-            }
-            mutation.mutate();
-          }}
-        >
+      <div className="space-y-4">
+        <Card>
+          <form
+            className="space-y-6"
+            onSubmit={(event) => {
+              event.preventDefault();
+              if (hasInvalidCustomColor) {
+                toast.error("Enter a valid hex color for custom mode, for example #F5C84B.");
+                return;
+              }
+              mutation.mutate();
+            }}
+          >
           <section className="grid gap-4 md:grid-cols-2">
             <div className="space-y-2">
               <label className="small">Organization name</label>
@@ -256,14 +258,16 @@ export default function OrgSettingsPage() {
             </div>
           </section>
 
-          <div>
-            <Button type="submit" disabled={mutation.isPending || !orgId || !canManage || hasInvalidCustomColor}>
-              {mutation.isPending ? "Saving..." : "Save org settings"}
-            </Button>
-            {!canManage ? <p className="small mt-3 text-[var(--muted-text)]">Only ORG_ADMIN can update organization settings.</p> : null}
-          </div>
-        </form>
-      </Card>
+            <div>
+              <Button type="submit" disabled={mutation.isPending || !orgId || !canManage || hasInvalidCustomColor}>
+                {mutation.isPending ? "Saving..." : "Save org settings"}
+              </Button>
+              {!canManage ? <p className="small mt-3 text-[var(--muted-text)]">Only ORG_ADMIN can update organization settings.</p> : null}
+            </div>
+          </form>
+        </Card>
+        <ChangePasswordPanel />
+      </div>
     </PageScaffold>
   );
 }

@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { apiClient } from "@/lib/apiClient";
 import type { AuthUser } from "@/lib/auth";
-import { clearCurrentUserCache, setCurrentUserCache } from "@/lib/auth";
+import { clearAuthScope, clearCurrentUserCache, setAuthScope, setCurrentUserCache } from "@/lib/auth";
 import { endpoints } from "@/lib/endpoints";
 import { orgLoginSchema } from "@/lib/zodSchemas";
 
@@ -34,18 +34,21 @@ export function OrgLoginForm() {
       setCurrentUserCache(queryClient, response.data);
       const hasOrgAccess = response.data.memberships.some((membership) => membership.is_active);
       if (hasOrgAccess) {
+        setAuthScope("org");
         toast.success("Welcome back");
         router.push("/org/dashboard");
         return;
       }
 
       if (response.data.is_system_admin) {
+        setAuthScope("system");
         toast.info("This account is a system admin. Redirecting to system dashboard.");
         router.push("/system/dashboard");
         return;
       }
 
       apiClient(endpoints.auth.logout, { method: "POST" }).finally(() => {
+        clearAuthScope();
         clearCurrentUserCache(queryClient);
         toast.error("This account has no organization access.");
       });

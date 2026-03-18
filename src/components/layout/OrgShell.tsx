@@ -10,7 +10,7 @@ import { PlatformNotices } from "@/components/layout/PlatformNotices";
 import { Topbar } from "@/components/layout/Topbar";
 import { Select } from "@/components/ui/select";
 import { apiClient } from "@/lib/apiClient";
-import { clearCurrentUserCache } from "@/lib/auth";
+import { clearAuthScope, clearCurrentUserCache } from "@/lib/auth";
 import { applyPrimaryColorOverride, clearPrimaryColorOverride } from "@/lib/brandTheme";
 import { endpoints } from "@/lib/endpoints";
 import { useAuthGuard } from "@/lib/guards";
@@ -21,7 +21,7 @@ export function OrgShell({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const queryClient = useQueryClient();
   const isLogin = pathname === "/org/login";
-  const { loading } = useAuthGuard("org", { enabled: !isLogin });
+  const { loading } = useAuthGuard("org");
   const { activeMemberships, orgId, updateOrg } = useOrgContext({ enabled: !isLogin });
   const activeMembership = activeMemberships.find((membership) => membership.organization === orgId) ?? null;
   const activeRole = activeMemberships.find((membership) => membership.organization === orgId)?.role ?? null;
@@ -66,6 +66,7 @@ export function OrgShell({ children }: { children: React.ReactNode }) {
   const logoutMutation = useMutation({
     mutationFn: () => apiClient(endpoints.auth.logout, { method: "POST" }),
     onSuccess: () => {
+      clearAuthScope();
       clearCurrentUserCache(queryClient);
       toast.success("Logged out");
       router.replace("/org/login");
