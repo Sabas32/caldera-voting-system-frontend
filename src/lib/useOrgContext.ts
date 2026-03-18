@@ -12,7 +12,7 @@ export function useCurrentUser(options?: { enabled?: boolean }) {
     queryKey: AUTH_ME_QUERY_KEY,
     queryFn: getCurrentUser,
     staleTime: 0,
-    refetchInterval: 5_000,
+    refetchInterval: false,
     retry: false,
     enabled,
     refetchOnWindowFocus: true,
