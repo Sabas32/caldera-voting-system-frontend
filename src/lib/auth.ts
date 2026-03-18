@@ -35,6 +35,7 @@ export function setCurrentUserCache(queryClient: QueryClient, user: AuthUser | n
 
 export function clearCurrentUserCache(queryClient: QueryClient) {
   queryClient.cancelQueries({ queryKey: AUTH_ME_QUERY_KEY });
+  queryClient.removeQueries({ queryKey: AUTH_ME_QUERY_KEY, exact: true });
   queryClient.setQueryData(AUTH_ME_QUERY_KEY, null);
 }
 
