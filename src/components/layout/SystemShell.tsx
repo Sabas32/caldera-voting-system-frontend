@@ -27,14 +27,20 @@ export function SystemShell({ children }: { children: React.ReactNode }) {
   const { loading } = useAuthGuard("system");
 
   const logoutMutation = useMutation({
-    mutationFn: () => apiClient(endpoints.auth.logout, { method: "POST" }),
+    mutationFn: () => apiClient(endpoints.auth.logout, { method: "GET" }),
     onSuccess: () => {
       clearAuthScope();
       clearCurrentUserCache(queryClient);
       toast.success("Logged out");
       router.replace("/system/login");
     },
-    onError: (error: Error) => toast.error(error.message),
+    onError: () => {
+      // Fallback for expired/missing session token across domains.
+      clearAuthScope();
+      clearCurrentUserCache(queryClient);
+      toast.info("You have been signed out.");
+      router.replace("/system/login");
+    },
   });
 
   if (!isLogin && loading) {

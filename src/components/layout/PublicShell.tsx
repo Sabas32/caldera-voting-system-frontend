@@ -126,7 +126,7 @@ export function PublicShell({ children }: { children: React.ReactNode }) {
   }, [electionSlug, themeQuery.data]);
 
   const { mutate: logout, isPending: logoutPending } = useMutation({
-    mutationFn: (reason: "manual" | "timeout") => apiClient(endpoints.vote.logout, { method: "POST" }).then(() => reason),
+    mutationFn: (reason: "manual" | "timeout") => apiClient(endpoints.vote.logout, { method: "GET" }).then(() => reason),
     onSuccess: (reason) => {
       if (reason === "timeout") {
         toast.info("You were automatically logged out.");
@@ -136,7 +136,15 @@ export function PublicShell({ children }: { children: React.ReactNode }) {
       clearVoterAutoLogoutSecondsForElection(electionSlug);
       router.replace("/vote");
     },
-    onError: (error: Error) => toast.error(error.message),
+    onError: (_error: Error, reason: "manual" | "timeout") => {
+      clearVoterAutoLogoutSecondsForElection(electionSlug);
+      if (reason === "timeout") {
+        toast.info("Your session ended and you were signed out.");
+      } else {
+        toast.info("You have been signed out.");
+      }
+      router.replace("/vote");
+    },
   });
 
   useEffect(() => {

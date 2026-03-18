@@ -64,14 +64,20 @@ export function OrgShell({ children }: { children: React.ReactNode }) {
   );
 
   const logoutMutation = useMutation({
-    mutationFn: () => apiClient(endpoints.auth.logout, { method: "POST" }),
+    mutationFn: () => apiClient(endpoints.auth.logout, { method: "GET" }),
     onSuccess: () => {
       clearAuthScope();
       clearCurrentUserCache(queryClient);
       toast.success("Logged out");
       router.replace("/org/login");
     },
-    onError: (error: Error) => toast.error(error.message),
+    onError: () => {
+      // Fallback for expired/missing session token across domains.
+      clearAuthScope();
+      clearCurrentUserCache(queryClient);
+      toast.info("You have been signed out.");
+      router.replace("/org/login");
+    },
   });
 
   if (!isLogin && loading) {
