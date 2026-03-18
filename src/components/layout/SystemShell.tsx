@@ -8,7 +8,7 @@ import { LoadingSkeletons } from "@/components/feedback/LoadingSkeletons";
 import { PlatformNotices } from "@/components/layout/PlatformNotices";
 import { Topbar } from "@/components/layout/Topbar";
 import { apiClient } from "@/lib/apiClient";
-import { clearCurrentUserCache } from "@/lib/auth";
+import { clearAuthScope, clearCurrentUserCache } from "@/lib/auth";
 import { endpoints } from "@/lib/endpoints";
 import { useAuthGuard } from "@/lib/guards";
 
@@ -24,11 +24,12 @@ export function SystemShell({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const queryClient = useQueryClient();
   const isLogin = pathname === "/system/login";
-  const { loading } = useAuthGuard("system", { enabled: !isLogin });
+  const { loading } = useAuthGuard("system");
 
   const logoutMutation = useMutation({
     mutationFn: () => apiClient(endpoints.auth.logout, { method: "POST" }),
     onSuccess: () => {
+      clearAuthScope();
       clearCurrentUserCache(queryClient);
       toast.success("Logged out");
       router.replace("/system/login");

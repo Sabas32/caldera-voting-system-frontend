@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { apiClient } from "@/lib/apiClient";
 import type { AuthUser } from "@/lib/auth";
-import { clearCurrentUserCache, setCurrentUserCache } from "@/lib/auth";
+import { clearAuthScope, clearCurrentUserCache, setAuthScope, setCurrentUserCache } from "@/lib/auth";
 import { endpoints } from "@/lib/endpoints";
 import { systemLoginSchema } from "@/lib/zodSchemas";
 
@@ -33,6 +33,7 @@ export function SystemLoginForm() {
     onSuccess: (response) => {
       setCurrentUserCache(queryClient, response.data);
       if (response.data.is_system_admin) {
+        setAuthScope("system");
         toast.success("Welcome back");
         router.push("/system/dashboard");
         return;
@@ -40,12 +41,14 @@ export function SystemLoginForm() {
 
       const hasOrgAccess = response.data.memberships.some((membership) => membership.is_active);
       if (hasOrgAccess) {
+        setAuthScope("org");
         toast.info("This account is not a system admin. Redirecting to organization dashboard.");
         router.push("/org/dashboard");
         return;
       }
 
       apiClient(endpoints.auth.logout, { method: "POST" }).finally(() => {
+        clearAuthScope();
         clearCurrentUserCache(queryClient);
         toast.error("This account has no system access.");
       });

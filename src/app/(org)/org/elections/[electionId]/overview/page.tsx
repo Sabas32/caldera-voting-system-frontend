@@ -39,6 +39,7 @@ export default function ElectionOverviewPage() {
   const router = useRouter();
   const { activeMembership } = useOrgContext();
   const queryClient = useQueryClient();
+  const [closeConfirmOpen, setCloseConfirmOpen] = useState(false);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const query = useQuery({
     queryKey: ["org-election-detail", electionId],
@@ -97,24 +98,38 @@ export default function ElectionOverviewPage() {
           {canEdit ? (
             <>
               <Button variant="secondary" onClick={() => statusMutation.mutate("schedule")} disabled={statusMutation.isPending}>
-                Schedule
+                Schedule Election
               </Button>
-              <Button variant="secondary" onClick={() => statusMutation.mutate("close")} disabled={statusMutation.isPending}>
-                Close
+              <Button variant="secondary" onClick={() => setCloseConfirmOpen(true)} disabled={statusMutation.isPending}>
+                Close Election
               </Button>
               {canArchive ? (
                 <Button onClick={() => statusMutation.mutate("archive")} disabled={statusMutation.isPending}>
-                  Archive
+                  Archive Election
                 </Button>
               ) : null}
               <Button variant="secondary" onClick={() => duplicateMutation.mutate()} disabled={duplicateMutation.isPending}>
-                Duplicate
+                Duplicate Election
               </Button>
             </>
           ) : null}
         </div>
       }
     >
+      <ConfirmDialog
+        open={closeConfirmOpen}
+        onOpenChange={setCloseConfirmOpen}
+        title="Close Election"
+        description="Are you sure you want to close this election now? Voters will no longer be able to submit ballots."
+        confirmLabel="Yes, Close Election"
+        confirmVariant="danger"
+        confirmPending={statusMutation.isPending}
+        onConfirm={() =>
+          statusMutation.mutate("close", {
+            onSuccess: () => setCloseConfirmOpen(false),
+          })
+        }
+      />
       <ConfirmDialog
         open={deleteConfirmOpen}
         onOpenChange={setDeleteConfirmOpen}
