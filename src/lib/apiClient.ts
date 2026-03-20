@@ -1,5 +1,6 @@
 import { API_BASE_URL, endpoints } from "@/lib/endpoints";
-import { extractApiErrorMessage } from "@/lib/apiErrors";
+import { extractApiErrorMessage, isAuthFailurePayload } from "@/lib/apiErrors";
+import { emitAuthRequired } from "@/lib/authEvents";
 
 export class ApiError extends Error {
   constructor(
@@ -82,7 +83,14 @@ export async function apiClient<T>(path: string, init?: RequestInit): Promise<T>
 
   const payload = await response.json().catch(() => null);
   if (!response.ok) {
-    throw new ApiError(extractApiErrorMessage(payload, undefined, response.status), response.status, payload);
+    const message = extractApiErrorMessage(payload, undefined, response.status);
+    const authRoute = [endpoints.auth.login, endpoints.auth.logout, endpoints.auth.csrf, endpoints.auth.me].some((item) =>
+      path.startsWith(item),
+    );
+    if (!authRoute && isAuthFailurePayload(payload, response.status)) {
+      emitAuthRequired(response.status === 401 ? "unauthorized" : "forbidden_auth");
+    }
+    throw new ApiError(message, response.status, payload);
   }
 
   return payload as T;

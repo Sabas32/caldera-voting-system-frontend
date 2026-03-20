@@ -45,7 +45,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
             staleTime: 0,
             refetchOnWindowFocus: true,
             refetchOnReconnect: true,
-            refetchInterval: 5_000,
+            refetchInterval: false,
             refetchIntervalInBackground: false,
           },
           mutations: {
