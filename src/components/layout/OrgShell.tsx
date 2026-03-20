@@ -10,6 +10,7 @@ import { PlatformNotices } from "@/components/layout/PlatformNotices";
 import { Topbar } from "@/components/layout/Topbar";
 import { Select } from "@/components/ui/select";
 import { apiClient } from "@/lib/apiClient";
+import { AUTH_REQUIRED_EVENT } from "@/lib/authEvents";
 import { clearAuthScope, clearCurrentUserCache } from "@/lib/auth";
 import { applyPrimaryColorOverride, clearPrimaryColorOverride } from "@/lib/brandTheme";
 import { endpoints } from "@/lib/endpoints";
@@ -51,6 +52,29 @@ export function OrgShell({ children }: { children: React.ReactNode }) {
     },
     [],
   );
+
+  useEffect(() => {
+    if (isLogin) {
+      return;
+    }
+
+    let handled = false;
+    const onAuthRequired = () => {
+      if (handled) {
+        return;
+      }
+      handled = true;
+      clearAuthScope();
+      clearCurrentUserCache(queryClient);
+      toast.info("Your session expired. Please sign in again.");
+      router.replace("/org/login");
+    };
+
+    window.addEventListener(AUTH_REQUIRED_EVENT, onAuthRequired as EventListener);
+    return () => {
+      window.removeEventListener(AUTH_REQUIRED_EVENT, onAuthRequired as EventListener);
+    };
+  }, [isLogin, queryClient, router]);
 
   const orgItems = useMemo(
     () => [

@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -8,6 +9,7 @@ import { LoadingSkeletons } from "@/components/feedback/LoadingSkeletons";
 import { PlatformNotices } from "@/components/layout/PlatformNotices";
 import { Topbar } from "@/components/layout/Topbar";
 import { apiClient } from "@/lib/apiClient";
+import { AUTH_REQUIRED_EVENT } from "@/lib/authEvents";
 import { clearAuthScope, clearCurrentUserCache } from "@/lib/auth";
 import { endpoints } from "@/lib/endpoints";
 import { useAuthGuard } from "@/lib/guards";
@@ -25,6 +27,29 @@ export function SystemShell({ children }: { children: React.ReactNode }) {
   const queryClient = useQueryClient();
   const isLogin = pathname === "/system/login";
   const { loading } = useAuthGuard("system");
+
+  useEffect(() => {
+    if (isLogin) {
+      return;
+    }
+
+    let handled = false;
+    const onAuthRequired = () => {
+      if (handled) {
+        return;
+      }
+      handled = true;
+      clearAuthScope();
+      clearCurrentUserCache(queryClient);
+      toast.info("Your session expired. Please sign in again.");
+      router.replace("/system/login");
+    };
+
+    window.addEventListener(AUTH_REQUIRED_EVENT, onAuthRequired as EventListener);
+    return () => {
+      window.removeEventListener(AUTH_REQUIRED_EVENT, onAuthRequired as EventListener);
+    };
+  }, [isLogin, queryClient, router]);
 
   const logoutMutation = useMutation({
     mutationFn: () => apiClient(endpoints.auth.logout, { method: "GET" }),

@@ -54,7 +54,7 @@ function mapStatusFallback(status?: number): string {
     return "Please check the information you entered and try again.";
   }
   if (status === 401) {
-    return "Your session has expired. Please sign in again.";
+    return "Please sign in to continue.";
   }
   if (status === 403) {
     return "You do not have permission to perform this action.";
@@ -69,6 +69,39 @@ function mapStatusFallback(status?: number): string {
     return "The server is temporarily unavailable. Please try again in a moment.";
   }
   return "We could not complete your request. Please try again.";
+}
+
+function flattenText(value: unknown): string {
+  if (Array.isArray(value)) {
+    return value.map((item) => flattenText(item)).join(" ");
+  }
+  if (isRecord(value)) {
+    return Object.values(value)
+      .map((item) => flattenText(item))
+      .join(" ");
+  }
+  if (value === null || value === undefined) {
+    return "";
+  }
+  return String(value);
+}
+
+export function isAuthFailurePayload(payload: unknown, status?: number): boolean {
+  if (status !== 401 && status !== 403) {
+    return false;
+  }
+
+  const text = flattenText(payload).toLowerCase();
+  if (status === 401) {
+    return true;
+  }
+
+  return (
+    text.includes("not authenticated") ||
+    text.includes("authentication credentials were not provided") ||
+    text.includes("invalid session") ||
+    text.includes("session expired")
+  );
 }
 
 function mapTechnicalMessage(message: string): string | null {
