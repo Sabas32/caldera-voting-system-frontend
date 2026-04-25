@@ -12,6 +12,7 @@ import { applyPrimaryColorOverride, clearPrimaryColorOverride, getPrimaryColorVa
 import { APP_NAME } from "@/lib/constants";
 import { endpoints } from "@/lib/endpoints";
 import {
+  DEFAULT_VOTER_AUTO_LOGOUT_SECONDS,
   clearVoterAutoLogoutSecondsForElection,
   getVoterAutoLogoutSecondsForElection,
   getVoterOrganizationNameForElection,
@@ -30,6 +31,7 @@ function formatCountdown(totalSeconds: number) {
 export function PublicShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
+  const [isHydrated, setIsHydrated] = useState(false);
   const [timerStartedAt, setTimerStartedAt] = useState<number | null>(null);
   const [nowTs, setNowTs] = useState(() => Date.now());
   const timeoutHandledRef = useRef(false);
@@ -49,59 +51,73 @@ export function PublicShell({ children }: { children: React.ReactNode }) {
     return parts.length > 3 ? parts[3] : null;
   }, [isElectionPage, pathname]);
   const isResultsStage = electionStage === "status" || electionStage === "results";
-  const votingAutoLogoutSeconds = useMemo(
-    () => getVoterAutoLogoutSecondsForElection(electionSlug),
-    [electionSlug],
-  );
-  const resultsViewUntil = useMemo(
-    () => getVoterResultsViewUntilForElection(electionSlug),
-    [electionSlug],
-  );
-
-  const themeProbePaths = useMemo(() => {
+  const stageProbePath = useMemo(() => {
     if (!electionSlug) {
-      return [];
-    }
-    if (electionStage === "results") {
-      return [endpoints.vote.results(electionSlug), endpoints.vote.status(electionSlug), endpoints.vote.ballot(electionSlug)];
+      return null;
     }
     if (electionStage === "status") {
-      return [endpoints.vote.status(electionSlug), endpoints.vote.results(electionSlug), endpoints.vote.ballot(electionSlug)];
+      return endpoints.vote.status(electionSlug);
     }
-    return [endpoints.vote.ballot(electionSlug), endpoints.vote.status(electionSlug), endpoints.vote.results(electionSlug)];
+    if (electionStage === "results") {
+      return endpoints.vote.results(electionSlug);
+    }
+    return endpoints.vote.ballot(electionSlug);
   }, [electionSlug, electionStage]);
+
+  useEffect(() => {
+    const hydratedTimer = window.setTimeout(() => {
+      setIsHydrated(true);
+    }, 0);
+    return () => {
+      window.clearTimeout(hydratedTimer);
+    };
+  }, []);
+
+  const votingAutoLogoutSeconds = useMemo(
+    () => (isHydrated ? getVoterAutoLogoutSecondsForElection(electionSlug) : DEFAULT_VOTER_AUTO_LOGOUT_SECONDS),
+    [electionSlug, isHydrated],
+  );
+  const resultsViewUntil = useMemo(
+    () => (isHydrated ? getVoterResultsViewUntilForElection(electionSlug) : null),
+    [electionSlug, isHydrated],
+  );
 
   const themeQuery = useQuery({
     queryKey: ["public-election-theme", electionSlug, electionStage],
-    enabled: Boolean(electionSlug) && isElectionPage,
+    enabled: Boolean(electionSlug) && isElectionPage && Boolean(stageProbePath),
     retry: false,
     refetchInterval: false,
     refetchOnWindowFocus: false,
     queryFn: async () => {
-      for (const path of themeProbePaths) {
-        try {
-          const payload = await apiClient<{
-            data?: {
-              organization_name?: string | null;
-              primary_color_override?: string | null;
-              election?: { organization_name?: string | null; primary_color_override?: string | null };
-            };
-          }>(path);
-          const organizationName = payload.data?.organization_name ?? payload.data?.election?.organization_name ?? null;
-          const color = payload.data?.primary_color_override ?? payload.data?.election?.primary_color_override ?? null;
-          if (organizationName || color) {
-            return { organizationName, color };
-          }
-        } catch {
-          continue;
-        }
+      if (!stageProbePath) {
+        return { organizationName: null, color: null };
+      }
+      try {
+        const payload = await apiClient<{
+          data?: {
+            organization_name?: string | null;
+            primary_color_override?: string | null;
+            election?: { organization_name?: string | null; primary_color_override?: string | null };
+          };
+        }>(stageProbePath);
+        const organizationName = payload.data?.organization_name ?? payload.data?.election?.organization_name ?? null;
+        const color = payload.data?.primary_color_override ?? payload.data?.election?.primary_color_override ?? null;
+        return { organizationName, color };
+      } catch {
+        // Public pages handle user-facing errors directly; shell should stay quiet.
       }
       return { organizationName: null, color: null };
     },
   });
 
-  const activeShellColor = themeQuery.data?.color ?? getVoterPrimaryColorForElection(electionSlug);
-  const activeOrganizationName = themeQuery.data?.organizationName ?? getVoterOrganizationNameForElection(electionSlug);
+  const activeShellColor = useMemo(
+    () => themeQuery.data?.color ?? (isHydrated ? getVoterPrimaryColorForElection(electionSlug) : null),
+    [electionSlug, isHydrated, themeQuery.data?.color],
+  );
+  const activeOrganizationName = useMemo(
+    () => themeQuery.data?.organizationName ?? (isHydrated ? getVoterOrganizationNameForElection(electionSlug) : null),
+    [electionSlug, isHydrated, themeQuery.data?.organizationName],
+  );
   const shellThemeVars = isElectionPage ? getPrimaryColorVariables(activeShellColor) : null;
 
   useEffect(() => {
@@ -204,7 +220,7 @@ export function PublicShell({ children }: { children: React.ReactNode }) {
   );
 
   const statusText = useMemo(() => {
-    if (!isElectionPage) {
+    if (!isElectionPage || !isHydrated) {
       return undefined;
     }
     if (isResultsStage) {
@@ -214,7 +230,7 @@ export function PublicShell({ children }: { children: React.ReactNode }) {
       return `Results session logout ${formatCountdown(remainingSeconds)}`;
     }
     return `Voting session logout ${formatCountdown(remainingSeconds)}`;
-  }, [isElectionPage, isResultsStage, remainingSeconds]);
+  }, [isElectionPage, isHydrated, isResultsStage, remainingSeconds]);
 
   return (
     <div className="min-h-screen pb-4" style={shellThemeVars ?? undefined}>
