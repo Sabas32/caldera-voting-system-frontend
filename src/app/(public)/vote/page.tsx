@@ -2,9 +2,10 @@
 
 import { ChangeEvent, useEffect, useRef, useState } from "react";
 import { useMutation } from "@tanstack/react-query";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import jsQR from "jsqr";
-import { Camera, ImageUp, KeyRound, QrCode, SquareX } from "lucide-react";
+import { Camera, ChevronRight, ImageUp, KeyRound, QrCode, ShieldCheck, SquareX } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -63,6 +64,7 @@ export default function VoteTokenPage() {
   const [scannerOpen, setScannerOpen] = useState(false);
   const [scannerError, setScannerError] = useState("");
   const [scannerMode, setScannerMode] = useState<"native" | "compatibility">("native");
+  const [adminAccessOpen, setAdminAccessOpen] = useState(false);
   const router = useRouter();
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -380,6 +382,38 @@ export default function VoteTokenPage() {
               {scannerError ? <p className="tiny text-[var(--danger)]">{scannerError}</p> : null}
             </div>
           </div>
+        </div>
+
+        <div className="relative mt-5 border-t border-[var(--edge)] pt-4">
+          <button
+            type="button"
+            className="group flex w-full items-center justify-between rounded-[10px] px-1 py-1 text-left transition-colors hover:bg-[color-mix(in_oklab,var(--surface)_72%,var(--surface-2))] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)]"
+            aria-expanded={adminAccessOpen}
+            aria-controls="administrator-access"
+            onClick={() => setAdminAccessOpen((open) => !open)}
+          >
+            <span className="flex items-center gap-2 small text-[var(--muted-text)] group-hover:text-[var(--text)]">
+              <ShieldCheck className="size-4" />
+              Administrator access
+            </span>
+            <ChevronRight className={`size-4 text-[var(--muted-text)] transition-transform ${adminAccessOpen ? "rotate-90" : ""}`} />
+          </button>
+
+          {adminAccessOpen ? (
+            <div id="administrator-access" className="mt-3 rounded-[12px] border border-[var(--edge)] bg-[color-mix(in_oklab,var(--surface)_76%,var(--surface-2))] p-3">
+              <p className="small text-[var(--muted-text)]">For election administrators only. Choose the workspace you manage.</p>
+              <div className="mt-3 flex flex-wrap gap-2">
+                <Link href="/org/login" className="inline-flex h-8 items-center gap-1.5 rounded-[10px] border border-[var(--edge)] px-3 text-sm font-medium text-[var(--text)] transition-colors hover:bg-[var(--surface)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)]">
+                  Organization admin
+                  <ChevronRight className="size-3.5" />
+                </Link>
+                <Link href="/system/login" className="inline-flex h-8 items-center gap-1.5 rounded-[10px] border border-[var(--edge)] px-3 text-sm font-medium text-[var(--text)] transition-colors hover:bg-[var(--surface)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)]">
+                  System admin
+                  <ChevronRight className="size-3.5" />
+                </Link>
+              </div>
+            </div>
+          ) : null}
         </div>
       </Card>
     </div>
