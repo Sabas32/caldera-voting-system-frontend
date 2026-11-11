@@ -4,7 +4,9 @@ import { Badge } from "@/components/ui/badge";
 import { Table, TableCell, TableHead, TableRow } from "@/components/ui/table";
 
 type CandidateResult = {
+  candidate_id?: string;
   name: string;
+  image_url?: string;
   votes: number;
   percentage: number;
   is_tied_leader: boolean;
@@ -50,7 +52,35 @@ export function ResultsCandidatesTable({
               return (
                 <TableRow key={id}>
                   <TableCell className="font-medium">{rank}</TableCell>
-                  <TableCell>{candidate.name}</TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-2">
+                      <span className="relative inline-flex h-8 w-8 items-center justify-center overflow-hidden rounded-full border border-[var(--edge)] bg-[color-mix(in_oklab,var(--surface)_76%,var(--surface-2))] text-[10px] font-semibold tracking-[0.03em] text-[var(--text)]">
+                        {candidate.image_url ? (
+                          <img
+                            src={candidate.image_url}
+                            alt={candidate.name}
+                            className="h-full w-full object-cover"
+                            onError={(event) => {
+                              event.currentTarget.style.display = "none";
+                              const fallback = event.currentTarget.nextElementSibling as HTMLElement | null;
+                              if (fallback) {
+                                fallback.style.display = "flex";
+                              }
+                            }}
+                          />
+                        ) : null}
+                        <span className={candidate.image_url ? "hidden h-full w-full items-center justify-center" : "flex h-full w-full items-center justify-center"}>
+                          {candidate.name
+                            .split(" ")
+                            .filter(Boolean)
+                            .slice(0, 2)
+                            .map((item) => item[0]?.toUpperCase() ?? "")
+                            .join("") || "NA"}
+                        </span>
+                      </span>
+                      <span>{candidate.name}</span>
+                    </div>
+                  </TableCell>
                   <TableCell>{candidate.votes.toLocaleString()}</TableCell>
                   <TableCell>{candidate.percentage.toFixed(2)}%</TableCell>
                   <TableCell>

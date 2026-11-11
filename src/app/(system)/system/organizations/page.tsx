@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 
+import { OrganizationLogo } from "@/components/brand/OrganizationLogo";
 import { PageScaffold } from "@/components/layout/PageScaffold";
 import { OrganizationsTable } from "@/components/tables/OrganizationsTable";
 import { Button } from "@/components/ui/button";
@@ -15,6 +16,7 @@ import { endpoints } from "@/lib/endpoints";
 type Organization = {
   id: string;
   name: string;
+  logo_url: string | null;
   slug: string;
   status: string;
   created_at: string;
@@ -43,7 +45,12 @@ export default function SystemOrganizationsPage() {
     () =>
       (query.data?.data ?? []).map((org) => ({
         id: org.id,
-        name: org.name,
+        name: (
+          <div className="flex min-w-[220px] items-center gap-3">
+            <OrganizationLogo name={org.name} logoUrl={org.logo_url} size="sm" />
+            <span className="font-medium text-[var(--text)]">{org.name}</span>
+          </div>
+        ),
         slug: org.slug,
         status: org.status,
         created: new Date(org.created_at).toLocaleDateString(),

@@ -19,14 +19,21 @@ export const endpoints = {
   org: {
     dashboard: "/org/dashboard/",
     settings: "/org/settings/",
+    logoUpload: "/org/settings/logo/",
     elections: "/org/elections/",
     electionDetail: (electionId: string) => `/org/elections/${electionId}/`,
     electionStatus: (electionId: string) => `/org/elections/${electionId}/status/`,
     electionDuplicate: (electionId: string) => `/org/elections/${electionId}/duplicate/`,
+    electionCategories: (electionId: string) => `/org/elections/${electionId}/categories/`,
+    electionCategoryDetail: (categoryId: string) => `/org/election-categories/${categoryId}/`,
+    electionCategoryOptionsBulk: (categoryId: string) => `/org/election-categories/${categoryId}/options/bulk/`,
+    electionCategoryOptionDetail: (optionId: string, cascade = false) =>
+      `/org/election-category-options/${optionId}/${cascade ? "?cascade=true" : ""}`,
     posts: (electionId: string) => `/org/elections/${electionId}/posts/`,
     postDetail: (postId: string) => `/org/posts/${postId}/`,
     candidates: (postId: string) => `/org/posts/${postId}/candidates/`,
     candidateDetail: (candidateId: string) => `/org/candidates/${candidateId}/`,
+    candidateImageUpload: (candidateId: string) => `/org/candidates/${candidateId}/image/`,
     tokenBatches: (electionId: string) => `/org/elections/${electionId}/token-batches/`,
     usedTokens: (electionId: string, search?: string) =>
       `/org/elections/${electionId}/used-tokens/${search ? `?search=${encodeURIComponent(search)}` : ""}`,

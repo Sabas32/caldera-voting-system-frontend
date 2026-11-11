@@ -88,6 +88,38 @@ export default function OrgSettingsPage() {
     onError: (error: Error) => toast.error(error.message),
   });
 
+  const logoUploadMutation = useMutation({
+    mutationFn: (file: File) => {
+      const body = new FormData();
+      body.append("logo", file);
+      return apiClient(endpoints.org.logoUpload, {
+        method: "POST",
+        headers: orgRequestHeaders(orgId),
+        body,
+      });
+    },
+    onSuccess: () => {
+      toast.success("Organization logo uploaded");
+      queryClient.invalidateQueries({ queryKey: ["org-settings", orgId] });
+      setDraft((prev) => ({ ...prev, logo_url: undefined }));
+    },
+    onError: (error: Error) => toast.error(error.message),
+  });
+
+  const logoRemoveMutation = useMutation({
+    mutationFn: () =>
+      apiClient(endpoints.org.logoUpload, {
+        method: "DELETE",
+        headers: orgRequestHeaders(orgId),
+      }),
+    onSuccess: () => {
+      toast.success("Organization logo removed");
+      queryClient.invalidateQueries({ queryKey: ["org-settings", orgId] });
+      setDraft((prev) => ({ ...prev, logo_url: "" }));
+    },
+    onError: (error: Error) => toast.error(error.message),
+  });
+
   return (
     <PageScaffold title="Organization Settings" subtitle="Branding defaults and election defaults" crumbs={[{ label: "Organization" }, { label: "Settings" }]}>
       <div className="space-y-4">
@@ -107,6 +139,48 @@ export default function OrgSettingsPage() {
             <div className="space-y-2">
               <label className="small">Organization name</label>
               <Input value={form?.name ?? ""} onChange={(event) => setDraft((prev) => ({ ...prev, name: event.target.value }))} />
+            </div>
+            <div className="space-y-2">
+              <label className="small">Organization logo</label>
+              <div className="rounded-[11px] border border-[var(--edge)] bg-[color-mix(in_oklab,var(--surface)_82%,var(--surface-2))] p-3">
+                <div className="mb-3 flex items-center gap-3">
+                  {form?.logo_url ? (
+                    <img
+                      src={form.logo_url}
+                      alt="Organization logo"
+                      className="h-12 w-12 rounded-[10px] border border-[var(--edge)] bg-[var(--surface)] object-contain p-1"
+                      onError={(event) => {
+                        event.currentTarget.style.display = "none";
+                      }}
+                    />
+                  ) : (
+                    <span className="inline-flex h-12 w-12 items-center justify-center rounded-[10px] border border-[var(--edge)] bg-[var(--surface)] text-xs font-semibold text-[var(--muted-text)]">
+                      LOGO
+                    </span>
+                  )}
+                  <p className="small text-[var(--muted-text)]">PNG, JPG, or WEBP up to 5MB.</p>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  <Input
+                    type="file"
+                    accept="image/png,image/jpeg,image/webp"
+                    disabled={!canManage || logoUploadMutation.isPending}
+                    onChange={(event) => {
+                      const file = event.target.files?.[0];
+                      if (!file) {
+                        return;
+                      }
+                      logoUploadMutation.mutate(file);
+                      event.currentTarget.value = "";
+                    }}
+                  />
+                  {form?.logo_url ? (
+                    <Button type="button" variant="secondary" onClick={() => logoRemoveMutation.mutate()} disabled={!canManage || logoRemoveMutation.isPending}>
+                      {logoRemoveMutation.isPending ? "Removing..." : "Remove logo"}
+                    </Button>
+                  ) : null}
+                </div>
+              </div>
             </div>
           </section>
 

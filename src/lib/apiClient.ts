@@ -50,16 +50,21 @@ async function fetchCsrfToken(force = false): Promise<string | null> {
 export async function apiClient<T>(path: string, init?: RequestInit): Promise<T> {
   const method = init?.method?.toUpperCase() ?? "GET";
   const isUnsafe = ["POST", "PUT", "PATCH", "DELETE"].includes(method);
+  const isFormDataBody = typeof FormData !== "undefined" && init?.body instanceof FormData;
   const request = async (csrfToken?: string | null) => {
     try {
+      const headers = new Headers(init?.headers ?? {});
+      if (isUnsafe && csrfToken) {
+        headers.set("X-CSRFToken", csrfToken);
+      }
+      if (!isFormDataBody && !headers.has("Content-Type")) {
+        headers.set("Content-Type", "application/json");
+      }
+
       return await fetch(`${API_BASE_URL}${path}`, {
         ...init,
         credentials: "include",
-        headers: {
-          "Content-Type": "application/json",
-          ...(isUnsafe && csrfToken ? { "X-CSRFToken": csrfToken } : {}),
-          ...(init?.headers ?? {}),
-        },
+        headers,
         cache: "no-store",
       });
     } catch {

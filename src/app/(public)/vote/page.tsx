@@ -15,6 +15,7 @@ import { applyPrimaryColorOverride } from "@/lib/brandTheme";
 import { endpoints } from "@/lib/endpoints";
 import {
   setVoterAutoLogoutSecondsForElection,
+  setVoterOrganizationLogoForElection,
   setVoterOrganizationNameForElection,
   setVoterPrimaryColorForElection,
   setVoterResultsWindowForElection,
@@ -77,6 +78,7 @@ export default function VoteTokenPage() {
         data: {
           election_slug: string;
           organization_name: string;
+          organization_logo_url: string | null;
           status: string;
           post_vote_access_mode: string;
           primary_color_override: string | null;
@@ -94,6 +96,7 @@ export default function VoteTokenPage() {
       setVoterResultsWindowForElection(payload.election_slug, payload.voter_results_view_until);
       setVoterPrimaryColorForElection(payload.election_slug, payload.primary_color_override);
       setVoterOrganizationNameForElection(payload.election_slug, payload.organization_name);
+      setVoterOrganizationLogoForElection(payload.election_slug, payload.organization_logo_url);
       applyPrimaryColorOverride(payload.primary_color_override);
       if (payload.status === "USED" && payload.post_vote_access_mode === "READ_ONLY_AFTER_VOTE") {
         router.push(`/e/${payload.election_slug}/status`);
