@@ -109,6 +109,13 @@ export default function VoteTokenPage() {
     },
   });
 
+  useEffect(() => {
+    const suppliedToken = new URLSearchParams(window.location.search).get("token")?.trim();
+    if (suppliedToken) {
+      setToken(suppliedToken);
+    }
+  }, []);
+
   function stopScanner() {
     if (scanIntervalRef.current !== null) {
       window.clearInterval(scanIntervalRef.current);
