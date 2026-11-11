@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <defs>
+    <linearGradient id="panel" x1="10" y1="6" x2="55" y2="59" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#15345B"/>
+      <stop offset="1" stop-color="#08162A"/>
+    </linearGradient>
+    <linearGradient id="mark" x1="20" y1="18" x2="46" y2="47" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#F7C45D"/>
+      <stop offset="1" stop-color="#DA8C2C"/>
+    </linearGradient>
+  </defs>
+  <rect width="64" height="64" rx="15" fill="url(#panel)"/>
+  <rect x="7" y="7" width="50" height="50" rx="11" fill="none" stroke="#7FA4D4" stroke-opacity=".26"/>
+  <path d="M20 18.5h19a5 5 0 0 1 5 5v19a5 5 0 0 1-5 5H20a5 5 0 0 1-5-5v-19a5 5 0 0 1 5-5Z" fill="#0B1F39" stroke="#A9C2E2" stroke-opacity=".52" stroke-width="2"/>
+  <path d="M22 28.5h15M22 34h9" stroke="#A9C2E2" stroke-linecap="round" stroke-width="2.5"/>
+  <circle cx="41" cy="40" r="10" fill="url(#mark)"/>
+  <path d="m36.5 40 3 3 5.5-6" fill="none" stroke="#10213A" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.8"/>
+</svg>
