@@ -5,6 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 import { ArrowRight, Settings2, ShieldCheck, UserCog, Users } from "lucide-react";
 import { useParams } from "next/navigation";
 
+import { OrganizationLogo } from "@/components/brand/OrganizationLogo";
 import { PageScaffold } from "@/components/layout/PageScaffold";
 import { ElectionsTable } from "@/components/tables/ElectionsTable";
 import { Badge } from "@/components/ui/badge";
@@ -18,6 +19,7 @@ type OrgDetailResponse = {
   data: {
     id: string;
     name: string;
+    logo_url: string | null;
     slug: string;
     status: string;
     created_at: string;
@@ -64,6 +66,21 @@ export default function OrganizationDetailPage() {
         { label: "Detail" },
       ]}
     >
+      {organization ? (
+        <Card className="mb-5 overflow-hidden">
+          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+            <div className="flex items-center gap-4">
+              <OrganizationLogo name={organization.name} logoUrl={organization.logo_url} size="xl" />
+              <div>
+                <p className="tiny uppercase tracking-[0.12em] text-[var(--muted-text)]">School / organization profile</p>
+                <h2 className="h2 mt-1">{organization.name}</h2>
+                <p className="small mt-1 text-[var(--muted-text)]">Slug: {organization.slug}</p>
+              </div>
+            </div>
+            <Badge className="w-fit border-[color-mix(in_oklab,var(--primary)_55%,var(--edge))]">{organization.status}</Badge>
+          </div>
+        </Card>
+      ) : null}
       <TabsRoot defaultValue="overview">
         <TabsList>
           <TabsTrigger value="overview">Overview</TabsTrigger>

@@ -31,7 +31,7 @@ export function OrgShell({ children }: { children: React.ReactNode }) {
     queryKey: ["org-settings", orgId],
     enabled: Boolean(orgId) && !isLogin,
     queryFn: () =>
-      apiClient<{ data: { name?: string; primary_color_override?: string | null } }>(endpoints.org.settings, {
+      apiClient<{ data: { name?: string; logo_url?: string | null; primary_color_override?: string | null } }>(endpoints.org.settings, {
         headers: orgRequestHeaders(orgId),
       }),
   });
@@ -121,6 +121,8 @@ export function OrgShell({ children }: { children: React.ReactNode }) {
       <Topbar
         title="Organization Administration"
         statusText={activeOrgName}
+        logoName={activeOrgName}
+        logoUrl={settingsQuery.data?.data?.logo_url ?? null}
         navItems={orgItems}
         onLogout={() => logoutMutation.mutate()}
         logoutPending={logoutMutation.isPending}

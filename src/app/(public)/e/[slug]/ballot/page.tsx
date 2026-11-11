@@ -14,17 +14,24 @@ import { ApiError, apiClient } from "@/lib/apiClient";
 import { applyPrimaryColorOverride } from "@/lib/brandTheme";
 import { endpoints } from "@/lib/endpoints";
 import { getInitials } from "@/lib/utils";
-import { setVoterOrganizationNameForElection, setVoterPrimaryColorForElection } from "@/lib/voterAutoLogout";
+import { setVoterOrganizationLogoForElection, setVoterOrganizationNameForElection, setVoterPrimaryColorForElection } from "@/lib/voterAutoLogout";
 
 type BallotResponse = {
   data: {
-    election: { title: string; slug: string; organization_name: string; instructions: string; primary_color_override: string | null };
+    election: {
+      title: string;
+      slug: string;
+      organization_name: string;
+      organization_logo_url: string | null;
+      instructions: string;
+      primary_color_override: string | null;
+    };
     posts: Array<{
       id: string;
       title: string;
       max_selections: number;
       allow_abstain: boolean;
-      candidates: Array<{ id: string; name: string; description: string }>;
+      candidates: Array<{ id: string; name: string; description: string; image_url?: string }>;
     }>;
   };
 };
@@ -52,8 +59,14 @@ export default function BallotPage() {
     }
     setVoterPrimaryColorForElection(electionSlug, electionPrimaryColorOverride);
     setVoterOrganizationNameForElection(electionSlug, ballotQuery.data?.data.election.organization_name ?? null);
+    setVoterOrganizationLogoForElection(electionSlug, ballotQuery.data?.data.election.organization_logo_url ?? null);
     applyPrimaryColorOverride(electionPrimaryColorOverride);
-  }, [ballotQuery.data?.data.election.organization_name, electionPrimaryColorOverride, electionSlug]);
+  }, [
+    ballotQuery.data?.data.election.organization_logo_url,
+    ballotQuery.data?.data.election.organization_name,
+    electionPrimaryColorOverride,
+    electionSlug,
+  ]);
 
   const completedPosts = useMemo(
     () =>
@@ -176,7 +189,23 @@ export default function BallotPage() {
                       >
                         <div className="flex items-start gap-3">
                           <div className="flex size-14 shrink-0 items-center justify-center rounded-[11px] border border-[var(--edge)] bg-[color-mix(in_oklab,var(--surface)_70%,var(--surface-2))] text-sm font-semibold tracking-[0.03em] text-[var(--text)]">
-                            {initials}
+                            {candidate.image_url ? (
+                              <img
+                                src={candidate.image_url}
+                                alt={candidate.name}
+                                className="h-full w-full rounded-[11px] object-cover"
+                                onError={(event) => {
+                                  event.currentTarget.style.display = "none";
+                                  const fallback = event.currentTarget.nextElementSibling as HTMLElement | null;
+                                  if (fallback) {
+                                    fallback.style.display = "flex";
+                                  }
+                                }}
+                              />
+                            ) : null}
+                            <span className={candidate.image_url ? "hidden h-full w-full items-center justify-center" : "flex h-full w-full items-center justify-center"}>
+                              {initials}
+                            </span>
                           </div>
                           <div className="min-w-0 flex-1">
                             <div className="flex items-center justify-between gap-2">

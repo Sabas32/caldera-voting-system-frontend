@@ -3,11 +3,13 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
 
 import { Button } from "@/components/ui/button";
+import { DashboardAccessChoice } from "@/components/forms/DashboardAccessChoice";
 import { Input } from "@/components/ui/input";
 import { apiClient } from "@/lib/apiClient";
 import type { AuthUser } from "@/lib/auth";
@@ -23,6 +25,7 @@ type LoginResponse = {
 export function SystemLoginForm() {
   const router = useRouter();
   const queryClient = useQueryClient();
+  const [dashboardUser, setDashboardUser] = useState<AuthUser | null>(null);
   const form = useForm<LoginValues>({
     resolver: zodResolver(systemLoginSchema),
     defaultValues: { email: "", password: "" },
@@ -32,6 +35,12 @@ export function SystemLoginForm() {
     mutationFn: (values: LoginValues) => apiClient<LoginResponse>(endpoints.auth.login, { method: "POST", body: JSON.stringify(values) }),
     onSuccess: (response) => {
       setCurrentUserCache(queryClient, response.data);
+      const hasOrgAccess = response.data.memberships.some((membership) => membership.is_active);
+      if (response.data.is_system_admin && hasOrgAccess) {
+        setDashboardUser(response.data);
+        toast.success("Choose a dashboard");
+        return;
+      }
       if (response.data.is_system_admin) {
         setAuthScope("system");
         toast.success("Welcome back");
@@ -39,7 +48,6 @@ export function SystemLoginForm() {
         return;
       }
 
-      const hasOrgAccess = response.data.memberships.some((membership) => membership.is_active);
       if (hasOrgAccess) {
         setAuthScope("org");
         toast.info("This account is not a system admin. Redirecting to organization dashboard.");
@@ -57,6 +65,22 @@ export function SystemLoginForm() {
       toast.error(error.message);
     },
   });
+
+  if (dashboardUser) {
+    return (
+      <DashboardAccessChoice
+        user={dashboardUser}
+        onChooseOrganization={() => {
+          setAuthScope("org");
+          router.push("/org/dashboard");
+        }}
+        onChooseSystem={() => {
+          setAuthScope("system");
+          router.push("/system/dashboard");
+        }}
+      />
+    );
+  }
 
   return (
     <form className="space-y-4" onSubmit={form.handleSubmit((values) => mutation.mutate(values))}>

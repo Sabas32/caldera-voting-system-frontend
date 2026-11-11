@@ -15,9 +15,11 @@ import {
   DEFAULT_VOTER_AUTO_LOGOUT_SECONDS,
   clearVoterAutoLogoutSecondsForElection,
   getVoterAutoLogoutSecondsForElection,
+  getVoterOrganizationLogoForElection,
   getVoterOrganizationNameForElection,
   getVoterPrimaryColorForElection,
   getVoterResultsViewUntilForElection,
+  setVoterOrganizationLogoForElection,
   setVoterOrganizationNameForElection,
   setVoterPrimaryColorForElection,
 } from "@/lib/voterAutoLogout";
@@ -90,23 +92,25 @@ export function PublicShell({ children }: { children: React.ReactNode }) {
     refetchOnWindowFocus: false,
     queryFn: async () => {
       if (!stageProbePath) {
-        return { organizationName: null, color: null };
+        return { organizationName: null, color: null, logoUrl: null };
       }
       try {
         const payload = await apiClient<{
           data?: {
             organization_name?: string | null;
+            organization_logo_url?: string | null;
             primary_color_override?: string | null;
-            election?: { organization_name?: string | null; primary_color_override?: string | null };
+            election?: { organization_name?: string | null; organization_logo_url?: string | null; primary_color_override?: string | null };
           };
         }>(stageProbePath);
         const organizationName = payload.data?.organization_name ?? payload.data?.election?.organization_name ?? null;
+        const logoUrl = payload.data?.organization_logo_url ?? payload.data?.election?.organization_logo_url ?? null;
         const color = payload.data?.primary_color_override ?? payload.data?.election?.primary_color_override ?? null;
-        return { organizationName, color };
+        return { organizationName, color, logoUrl };
       } catch {
         // Public pages handle user-facing errors directly; shell should stay quiet.
       }
-      return { organizationName: null, color: null };
+      return { organizationName: null, color: null, logoUrl: null };
     },
   });
 
@@ -117,6 +121,10 @@ export function PublicShell({ children }: { children: React.ReactNode }) {
   const activeOrganizationName = useMemo(
     () => themeQuery.data?.organizationName ?? (isHydrated ? getVoterOrganizationNameForElection(electionSlug) : null),
     [electionSlug, isHydrated, themeQuery.data?.organizationName],
+  );
+  const activeOrganizationLogoUrl = useMemo(
+    () => themeQuery.data?.logoUrl ?? (isHydrated ? getVoterOrganizationLogoForElection(electionSlug) : null),
+    [electionSlug, isHydrated, themeQuery.data?.logoUrl],
   );
   const shellThemeVars = isElectionPage ? getPrimaryColorVariables(activeShellColor) : null;
 
@@ -139,6 +147,7 @@ export function PublicShell({ children }: { children: React.ReactNode }) {
     if (themeQuery.data.organizationName) {
       setVoterOrganizationNameForElection(electionSlug, themeQuery.data.organizationName);
     }
+    setVoterOrganizationLogoForElection(electionSlug, themeQuery.data.logoUrl);
   }, [electionSlug, themeQuery.data]);
 
   const { mutate: logout, isPending: logoutPending } = useMutation({
@@ -236,6 +245,8 @@ export function PublicShell({ children }: { children: React.ReactNode }) {
     <div className="min-h-screen pb-4" style={shellThemeVars ?? undefined}>
       <Topbar
         title={activeOrganizationName ? `${activeOrganizationName} Voter` : `${APP_NAME} Voter`}
+        logoName={activeOrganizationName || APP_NAME}
+        logoUrl={activeOrganizationLogoUrl}
         statusText={statusText}
         onLogout={isElectionPage ? () => logout("manual") : undefined}
         logoutPending={logoutPending}

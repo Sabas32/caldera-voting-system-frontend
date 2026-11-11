@@ -3,11 +3,13 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
 
 import { Button } from "@/components/ui/button";
+import { DashboardAccessChoice } from "@/components/forms/DashboardAccessChoice";
 import { Input } from "@/components/ui/input";
 import { apiClient } from "@/lib/apiClient";
 import type { AuthUser } from "@/lib/auth";
@@ -23,6 +25,7 @@ type LoginResponse = {
 export function OrgLoginForm() {
   const router = useRouter();
   const queryClient = useQueryClient();
+  const [dashboardUser, setDashboardUser] = useState<AuthUser | null>(null);
   const form = useForm<LoginValues>({
     resolver: zodResolver(orgLoginSchema),
     defaultValues: { email: "", password: "" },
@@ -33,6 +36,11 @@ export function OrgLoginForm() {
     onSuccess: (response) => {
       setCurrentUserCache(queryClient, response.data);
       const hasOrgAccess = response.data.memberships.some((membership) => membership.is_active);
+      if (hasOrgAccess && response.data.is_system_admin) {
+        setDashboardUser(response.data);
+        toast.success("Choose a dashboard");
+        return;
+      }
       if (hasOrgAccess) {
         setAuthScope("org");
         toast.success("Welcome back");
@@ -57,6 +65,22 @@ export function OrgLoginForm() {
       toast.error(error.message);
     },
   });
+
+  if (dashboardUser) {
+    return (
+      <DashboardAccessChoice
+        user={dashboardUser}
+        onChooseOrganization={() => {
+          setAuthScope("org");
+          router.push("/org/dashboard");
+        }}
+        onChooseSystem={() => {
+          setAuthScope("system");
+          router.push("/system/dashboard");
+        }}
+      />
+    );
+  }
 
   return (
     <form className="space-y-4" onSubmit={form.handleSubmit((values) => mutation.mutate(values))}>

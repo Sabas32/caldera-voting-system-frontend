@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowRight, CalendarClock, Clock3, Eye, PencilLine, ShieldCheck } from "lucide-react";
 
+import { OrganizationLogo } from "@/components/brand/OrganizationLogo";
 import { PageScaffold } from "@/components/layout/PageScaffold";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -32,6 +33,15 @@ type DashboardResponse = {
       actor_email: string | null;
       created_at: string;
     }>;
+  };
+};
+
+type OrgSettingsResponse = {
+  data: {
+    name: string;
+    slug: string;
+    logo_url: string | null;
+    status: string;
   };
 };
 
@@ -85,6 +95,14 @@ function getInitials(value: string | null) {
 export default function OrgDashboardPage() {
   const { orgId, activeMembership } = useOrgContext();
   const canManage = activeMembership?.role === "ORG_ADMIN" || activeMembership?.role === "ELECTION_MANAGER";
+  const settingsQuery = useQuery({
+    queryKey: ["org-settings", orgId],
+    enabled: Boolean(orgId),
+    queryFn: () =>
+      apiClient<OrgSettingsResponse>(endpoints.org.settings, {
+        headers: orgRequestHeaders(orgId),
+      }),
+  });
   const query = useQuery({
     queryKey: ["org-dashboard", orgId],
     enabled: Boolean(orgId),
@@ -95,6 +113,8 @@ export default function OrgDashboardPage() {
   });
 
   const data = query.data?.data;
+  const organization = settingsQuery.data?.data;
+  const organizationName = organization?.name || activeMembership?.organization_slug || "Organization";
   const kpis = [
     { label: "Active elections", value: data?.active_elections ?? 0 },
     { label: "Tokens generated", value: data?.tokens_generated ?? 0 },
@@ -115,6 +135,23 @@ export default function OrgDashboardPage() {
         ) : null
       }
     >
+      <Card className="mb-5 overflow-hidden">
+        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+          <div className="flex items-center gap-4">
+            <OrganizationLogo name={organizationName} logoUrl={organization?.logo_url ?? null} size="xl" />
+            <div>
+              <p className="tiny uppercase tracking-[0.12em] text-[var(--muted-text)]">Active school / organization</p>
+              <h2 className="h2 mt-1">{organizationName}</h2>
+              <p className="small mt-1 text-[var(--muted-text)]">
+                {organization?.slug ?? activeMembership?.organization_slug ?? "current workspace"} {activeMembership?.role ? `| ${activeMembership.role}` : ""}
+              </p>
+            </div>
+          </div>
+          <Badge className="w-fit border-[color-mix(in_oklab,var(--primary)_55%,var(--edge))]">
+            {organization?.status ?? "ACTIVE"}
+          </Badge>
+        </div>
+      </Card>
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         {kpis.map((kpi) => (
           <Card key={kpi.label} className="relative overflow-hidden">

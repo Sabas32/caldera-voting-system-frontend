@@ -11,12 +11,12 @@ import { Card } from "@/components/ui/card";
 import { apiClient } from "@/lib/apiClient";
 import { applyPrimaryColorOverride } from "@/lib/brandTheme";
 import { endpoints } from "@/lib/endpoints";
-import { setVoterOrganizationNameForElection, setVoterPrimaryColorForElection } from "@/lib/voterAutoLogout";
+import { setVoterOrganizationLogoForElection, setVoterOrganizationNameForElection, setVoterPrimaryColorForElection } from "@/lib/voterAutoLogout";
 
 type StoredSelection = Record<string, { candidate_ids: string[]; abstain: boolean }>;
 type BallotResponse = {
   data: {
-    election: { slug: string; organization_name: string; primary_color_override: string | null };
+    election: { slug: string; organization_name: string; organization_logo_url: string | null; primary_color_override: string | null };
     posts: Array<{
       id: string;
       title: string;
@@ -53,8 +53,14 @@ export default function ReviewPage() {
     }
     setVoterPrimaryColorForElection(electionSlug, electionPrimaryColorOverride);
     setVoterOrganizationNameForElection(electionSlug, ballotQuery.data?.data.election.organization_name ?? null);
+    setVoterOrganizationLogoForElection(electionSlug, ballotQuery.data?.data.election.organization_logo_url ?? null);
     applyPrimaryColorOverride(electionPrimaryColorOverride);
-  }, [ballotQuery.data?.data.election.organization_name, electionPrimaryColorOverride, electionSlug]);
+  }, [
+    ballotQuery.data?.data.election.organization_logo_url,
+    ballotQuery.data?.data.election.organization_name,
+    electionPrimaryColorOverride,
+    electionSlug,
+  ]);
 
   const totalSelections = useMemo(
     () => Object.values(selections).reduce((total, item) => total + (item.abstain ? 0 : item.candidate_ids.length), 0),

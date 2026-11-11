@@ -13,11 +13,12 @@ import { Card } from "@/components/ui/card";
 import { Select } from "@/components/ui/select";
 import { apiClient } from "@/lib/apiClient";
 import { applyPrimaryColorOverride, getPrimaryColorVariables } from "@/lib/brandTheme";
-import { setVoterOrganizationNameForElection, setVoterPrimaryColorForElection } from "@/lib/voterAutoLogout";
+import { setVoterOrganizationLogoForElection, setVoterOrganizationNameForElection, setVoterPrimaryColorForElection } from "@/lib/voterAutoLogout";
 
 type CandidateResult = {
   candidate_id: string;
   name: string;
+  image_url?: string;
   votes: number;
   percentage: number;
   is_tied_leader: boolean;
@@ -37,6 +38,7 @@ type PublicResultsResponse = {
       title: string;
       slug: string;
       organization_name: string;
+      organization_logo_url: string | null;
       status: string;
       publish_results: boolean;
       public_results_enabled: boolean;
@@ -76,7 +78,43 @@ function PostResultsPanel({
 
       <div className={mode === "split" ? "grid gap-4 xl:grid-cols-2" : ""}>
         {mode !== "table" ? (
-          <ResultsBarChart data={post.candidates.map((item) => ({ name: item.name, votes: item.votes }))} />
+          <div className="space-y-3">
+            <ResultsBarChart data={post.candidates.map((item) => ({ name: item.name, votes: item.votes }))} />
+            <div className="flex flex-wrap gap-2">
+              {post.candidates.map((candidate) => (
+                <div
+                  key={`${post.post_id}-${candidate.candidate_id}`}
+                  className="inline-flex items-center gap-2 rounded-full border border-[var(--edge)] bg-[color-mix(in_oklab,var(--surface)_78%,var(--surface-2))] px-2.5 py-1"
+                >
+                  <span className="relative inline-flex h-6 w-6 items-center justify-center overflow-hidden rounded-full border border-[var(--edge)] bg-[var(--surface)] text-[9px] font-semibold text-[var(--muted-text)]">
+                    {candidate.image_url ? (
+                      <img
+                        src={candidate.image_url}
+                        alt={candidate.name}
+                        className="h-full w-full object-cover"
+                        onError={(event) => {
+                          event.currentTarget.style.display = "none";
+                          const fallback = event.currentTarget.nextElementSibling as HTMLElement | null;
+                          if (fallback) {
+                            fallback.style.display = "flex";
+                          }
+                        }}
+                      />
+                    ) : null}
+                    <span className={candidate.image_url ? "hidden h-full w-full items-center justify-center" : "flex h-full w-full items-center justify-center"}>
+                      {candidate.name
+                        .split(" ")
+                        .filter(Boolean)
+                        .slice(0, 2)
+                        .map((part) => part[0]?.toUpperCase() ?? "")
+                        .join("") || "NA"}
+                    </span>
+                  </span>
+                  <span className="small">{candidate.name}</span>
+                </div>
+              ))}
+            </div>
+          </div>
         ) : null}
         {mode !== "chart" ? <ResultsCandidatesTable candidates={post.candidates} tieDetected={post.tie_detected} /> : null}
       </div>
@@ -106,8 +144,14 @@ export default function PublicResultsPage() {
     }
     setVoterPrimaryColorForElection(electionSlug, electionPrimaryColorOverride);
     setVoterOrganizationNameForElection(electionSlug, query.data?.data.election.organization_name ?? null);
+    setVoterOrganizationLogoForElection(electionSlug, query.data?.data.election.organization_logo_url ?? null);
     applyPrimaryColorOverride(electionPrimaryColorOverride);
-  }, [electionPrimaryColorOverride, electionSlug, query.data?.data.election.organization_name]);
+  }, [
+    electionPrimaryColorOverride,
+    electionSlug,
+    query.data?.data.election.organization_logo_url,
+    query.data?.data.election.organization_name,
+  ]);
 
   if (query.isLoading) {
     return <Card>Loading results...</Card>;

@@ -30,6 +30,7 @@ type Candidate = {
   name: string;
   status: string;
   description: string;
+  image_url: string;
   sort_order?: number;
 };
 
@@ -55,6 +56,9 @@ export default function ElectionCandidatesPage() {
     status: "APPROVED" as CandidateStatus,
   });
   const [editingCandidateId, setEditingCandidateId] = useState<string | null>(null);
+  const [editingCandidateImageUrl, setEditingCandidateImageUrl] = useState("");
+  const [createImageFile, setCreateImageFile] = useState<File | null>(null);
+  const [editImageFile, setEditImageFile] = useState<File | null>(null);
   const [editForm, setEditForm] = useState({
     name: "",
     description: "",
@@ -79,18 +83,29 @@ export default function ElectionCandidatesPage() {
   const candidates = candidatesQuery.data?.data ?? [];
 
   const createMutation = useMutation({
-    mutationFn: () =>
-      apiClient<CandidateCreateResponse>(endpoints.org.candidates(effectivePostId), {
+    mutationFn: async () => {
+      const response = await apiClient<CandidateCreateResponse>(endpoints.org.candidates(effectivePostId), {
         method: "POST",
         body: JSON.stringify({
           ...form,
           sort_order: Number(form.sort_order),
         }),
-      }),
+      });
+      if (createImageFile) {
+        const body = new FormData();
+        body.append("image", createImageFile);
+        await apiClient(endpoints.org.candidateImageUpload(response.data.id), {
+          method: "POST",
+          body,
+        });
+      }
+      return response;
+    },
     onSuccess: () => {
       toast.success("Candidate saved");
       queryClient.invalidateQueries({ queryKey: ["org-post-candidates", effectivePostId] });
       setForm({ name: "", description: "", sort_order: "1", status: "APPROVED" });
+      setCreateImageFile(null);
       setShowCreateDialog(false);
     },
     onError: (error: Error) => toast.error(error.message),
@@ -105,12 +120,25 @@ export default function ElectionCandidatesPage() {
     onError: (error: Error) => toast.error(error.message),
   });
 
+  const removeImageMutation = useMutation({
+    mutationFn: (candidateId: string) =>
+      apiClient(endpoints.org.candidateImageUpload(candidateId), {
+        method: "DELETE",
+      }),
+    onSuccess: () => {
+      toast.success("Candidate image removed");
+      queryClient.invalidateQueries({ queryKey: ["org-post-candidates", effectivePostId] });
+      setEditingCandidateImageUrl("");
+    },
+    onError: (error: Error) => toast.error(error.message),
+  });
+
   const updateMutation = useMutation({
-    mutationFn: () => {
+    mutationFn: async () => {
       if (!editingCandidateId) {
         throw new Error("No candidate selected for editing");
       }
-      return apiClient(endpoints.org.candidateDetail(editingCandidateId), {
+      const payload = await apiClient(endpoints.org.candidateDetail(editingCandidateId), {
         method: "PATCH",
         body: JSON.stringify({
           name: editForm.name,
@@ -119,10 +147,21 @@ export default function ElectionCandidatesPage() {
           status: editForm.status,
         }),
       });
+      if (editImageFile) {
+        const body = new FormData();
+        body.append("image", editImageFile);
+        await apiClient(endpoints.org.candidateImageUpload(editingCandidateId), {
+          method: "POST",
+          body,
+        });
+      }
+      return payload;
     },
     onSuccess: () => {
       toast.success("Candidate updated");
       setEditingCandidateId(null);
+      setEditingCandidateImageUrl("");
+      setEditImageFile(null);
       queryClient.invalidateQueries({ queryKey: ["org-post-candidates", effectivePostId] });
     },
     onError: (error: Error) => toast.error(error.message),
@@ -132,6 +171,8 @@ export default function ElectionCandidatesPage() {
 
   const openEditDialog = (candidate: Candidate) => {
     setEditingCandidateId(candidate.id);
+    setEditingCandidateImageUrl(candidate.image_url ?? "");
+    setEditImageFile(null);
     setEditForm({
       name: candidate.name,
       description: candidate.description ?? "",
@@ -150,7 +191,15 @@ export default function ElectionCandidatesPage() {
         { label: "Candidates" },
       ]}
     >
-      <DialogRoot open={showCreateDialog} onOpenChange={setShowCreateDialog}>
+      <DialogRoot
+        open={showCreateDialog}
+        onOpenChange={(open) => {
+          setShowCreateDialog(open);
+          if (!open) {
+            setCreateImageFile(null);
+          }
+        }}
+      >
         <DialogContent className="max-h-[92vh] overflow-hidden p-0 sm:max-w-2xl">
           <form
             className="flex max-h-[92vh] min-h-0 flex-col"
@@ -201,6 +250,20 @@ export default function ElectionCandidatesPage() {
                 />
               </div>
 
+              <div className="space-y-2">
+                <label className="small block text-[var(--muted-text)]">Candidate image (optional)</label>
+                <Input
+                  type="file"
+                  accept="image/png,image/jpeg,image/webp"
+                  onChange={(event) => {
+                    setCreateImageFile(event.target.files?.[0] ?? null);
+                  }}
+                />
+                <p className="tiny text-[var(--muted-text)]">
+                  {createImageFile ? `Selected: ${createImageFile.name}` : "PNG, JPG, or WEBP up to 5MB."}
+                </p>
+              </div>
+
               <div className="grid gap-3 md:grid-cols-2">
                 <div className="space-y-2">
                   <label className="small block text-[var(--muted-text)]">Ballot position</label>
@@ -249,6 +312,8 @@ export default function ElectionCandidatesPage() {
         onOpenChange={(open) => {
           if (!open) {
             setEditingCandidateId(null);
+            setEditingCandidateImageUrl("");
+            setEditImageFile(null);
           }
         }}
       >
@@ -285,6 +350,38 @@ export default function ElectionCandidatesPage() {
               <option value="APPROVED">APPROVED</option>
               <option value="DRAFT">DRAFT</option>
             </Select>
+            <div className="space-y-2 rounded-[10px] border border-[var(--edge)] p-3">
+              <label className="small block text-[var(--muted-text)]">Candidate image</label>
+              {editingCandidateImageUrl ? (
+                <img
+                  src={editingCandidateImageUrl}
+                  alt="Candidate preview"
+                  className="h-16 w-16 rounded-[10px] border border-[var(--edge)] bg-[var(--surface)] object-cover"
+                />
+              ) : (
+                <span className="small text-[var(--muted-text)]">No image uploaded.</span>
+              )}
+              <Input
+                type="file"
+                accept="image/png,image/jpeg,image/webp"
+                onChange={(event) => setEditImageFile(event.target.files?.[0] ?? null)}
+              />
+              {editingCandidateImageUrl ? (
+                <Button
+                  type="button"
+                  variant="secondary"
+                  onClick={() => {
+                    if (!editingCandidateId) {
+                      return;
+                    }
+                    removeImageMutation.mutate(editingCandidateId);
+                  }}
+                  disabled={removeImageMutation.isPending}
+                >
+                  {removeImageMutation.isPending ? "Removing..." : "Remove image"}
+                </Button>
+              ) : null}
+            </div>
             <div className="mt-2 flex justify-end gap-2">
               <Button type="button" variant="secondary" onClick={() => setEditingCandidateId(null)} disabled={updateMutation.isPending}>
                 Cancel
@@ -341,9 +438,25 @@ export default function ElectionCandidatesPage() {
                 id: candidate.id,
                 candidate: (
                   <div className="flex items-center gap-2">
-                    <span className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-[var(--edge)] bg-[color-mix(in_oklab,var(--surface)_76%,var(--surface-2))] text-xs font-semibold tracking-[0.03em] text-[var(--text)]">
-                      {getInitials(candidate.name)}
-                    </span>
+                    <div className="relative inline-flex h-9 w-9 items-center justify-center overflow-hidden rounded-full border border-[var(--edge)] bg-[color-mix(in_oklab,var(--surface)_76%,var(--surface-2))] text-xs font-semibold tracking-[0.03em] text-[var(--text)]">
+                      {candidate.image_url ? (
+                        <img
+                          src={candidate.image_url}
+                          alt={candidate.name}
+                          className="h-full w-full object-cover"
+                          onError={(event) => {
+                            event.currentTarget.style.display = "none";
+                            const fallback = event.currentTarget.nextElementSibling as HTMLElement | null;
+                            if (fallback) {
+                              fallback.style.display = "flex";
+                            }
+                          }}
+                        />
+                      ) : null}
+                      <span className={candidate.image_url ? "hidden h-full w-full items-center justify-center" : "flex h-full w-full items-center justify-center"}>
+                        {getInitials(candidate.name)}
+                      </span>
+                    </div>
                     <div className="min-w-0">
                       <p className="truncate font-medium">{candidate.name}</p>
                       <p className="tiny text-[var(--muted-text)]">Order {candidate.sort_order ?? 1}</p>

@@ -9,7 +9,12 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { apiClient } from "@/lib/apiClient";
 import { applyPrimaryColorOverride } from "@/lib/brandTheme";
-import { setVoterOrganizationNameForElection, setVoterPrimaryColorForElection, setVoterResultsWindowForElection } from "@/lib/voterAutoLogout";
+import {
+  setVoterOrganizationLogoForElection,
+  setVoterOrganizationNameForElection,
+  setVoterPrimaryColorForElection,
+  setVoterResultsWindowForElection,
+} from "@/lib/voterAutoLogout";
 
 export default function StatusPage() {
   const { slug } = useParams<{ slug: string }>();
@@ -29,6 +34,7 @@ export default function StatusPage() {
           voter_results_view_from: string | null;
           voter_results_view_until: string | null;
           organization_name: string;
+          organization_logo_url: string | null;
           primary_color_override: string | null;
         };
       }>(`/vote/elections/${slug}/status/`),
@@ -37,6 +43,7 @@ export default function StatusPage() {
   const primaryColorOverride = query.data?.data.primary_color_override ?? null;
   const voterResultsViewUntil = query.data?.data.voter_results_view_until ?? null;
   const organizationName = query.data?.data.organization_name ?? null;
+  const organizationLogoUrl = query.data?.data.organization_logo_url ?? null;
 
   useEffect(() => {
     if (!slug || !statusPayload) {
@@ -45,8 +52,9 @@ export default function StatusPage() {
     setVoterResultsWindowForElection(slug, voterResultsViewUntil);
     setVoterPrimaryColorForElection(slug, primaryColorOverride);
     setVoterOrganizationNameForElection(slug, organizationName);
+    setVoterOrganizationLogoForElection(slug, organizationLogoUrl);
     applyPrimaryColorOverride(primaryColorOverride);
-  }, [organizationName, primaryColorOverride, slug, statusPayload, voterResultsViewUntil]);
+  }, [organizationLogoUrl, organizationName, primaryColorOverride, slug, statusPayload, voterResultsViewUntil]);
 
   if (query.isLoading) {
     return <Card>Loading status...</Card>;

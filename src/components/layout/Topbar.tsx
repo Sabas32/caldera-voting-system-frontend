@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { LogOut } from "lucide-react";
 
+import { OrganizationLogo } from "@/components/brand/OrganizationLogo";
 import { ThemeToggle } from "@/components/layout/ThemeToggle";
 import { Button } from "@/components/ui/button";
 import { usePlatformSettings } from "@/lib/usePlatformSettings";
@@ -15,12 +16,16 @@ export function Topbar({
   onLogout,
   logoutPending = false,
   statusText,
+  logoUrl,
+  logoName,
 }: {
   title: string;
   navItems?: Array<{ label: string; href: string }>;
   onLogout?: () => void;
   logoutPending?: boolean;
   statusText?: string;
+  logoUrl?: string | null;
+  logoName?: string | null;
 }) {
   const pathname = usePathname();
   const settings = usePlatformSettings();
@@ -29,6 +34,7 @@ export function Topbar({
     <header className="sticky top-0 z-30 px-3 pt-3 md:px-4">
       <div className="rounded-[18px] border border-[var(--edge)] bg-[linear-gradient(180deg,color-mix(in_oklab,var(--surface)_86%,transparent),color-mix(in_oklab,var(--surface)_72%,var(--surface-2)))] shadow-[0_18px_34px_var(--shadow)] backdrop-blur-xl">
         <div className="flex min-h-16 items-center gap-3 px-3 py-2 md:px-4">
+          <OrganizationLogo name={logoName || title || settings.platformName} logoUrl={logoUrl} size="md" />
           <div className="min-w-0">
             <p className="tiny uppercase tracking-[0.12em] text-[var(--muted-text)]">{settings.platformName}</p>
             <p className="small truncate font-medium text-[var(--text)]">{title}</p>
